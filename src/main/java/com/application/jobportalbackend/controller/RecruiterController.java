@@ -1,5 +1,7 @@
 package com.application.jobportalbackend.controller;
 
+import com.application.jobportalbackend.dto.JobPostRequestDTO;
+import com.application.jobportalbackend.dto.JobUpdateRequestDTO;
 import com.application.jobportalbackend.service.RecruiterService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
