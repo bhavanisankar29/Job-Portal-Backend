@@ -38,7 +38,7 @@ public class JobSeeker {
     @ColumnDefault("0")
     private String yearsOfExperience;
 
-    @OneToMany(mappedBy = "jobseeker", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<JobApplication> jobApplicationList = new ArrayList<>();
 
     @ManyToMany
