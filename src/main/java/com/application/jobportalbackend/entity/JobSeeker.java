@@ -20,7 +20,7 @@ public class JobSeeker {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "job_seeker_id")
-    private int jobSeekerId;
+    private Long jobSeekerId;
 
     @Column(unique = true, nullable = false)
     private String email;

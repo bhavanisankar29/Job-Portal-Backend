@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class RecruiterDTO {
+public class RecruiterSignupDTO {
 
     private String email;
     private String firstName;

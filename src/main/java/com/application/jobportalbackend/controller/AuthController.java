@@ -1,7 +1,9 @@
 package com.application.jobportalbackend.controller;
 
-import com.application.jobportalbackend.dto.JobSeekerDTO;
-import com.application.jobportalbackend.dto.RecruiterDTO;
+import com.application.jobportalbackend.dto.JobSeekerSignupDTO;
+import com.application.jobportalbackend.dto.RecruiterSignupDTO;
+import com.application.jobportalbackend.dto.SigninRequestDTO;
+import com.application.jobportalbackend.dto.SigninResponseDTO;
 import com.application.jobportalbackend.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +22,17 @@ public class AuthController {
     }
 
     @PostMapping("/recruiter/signup")
-    public ResponseEntity<String> recruiterRegistration(@RequestBody RecruiterDTO recruiterDTO) {
-        return new ResponseEntity<String>(authService.recruiterRegistration(recruiterDTO), HttpStatus.OK);
+    public ResponseEntity<String> recruiterRegistration(@RequestBody RecruiterSignupDTO recruiterSignupDTO) {
+        return new ResponseEntity<String>(authService.recruiterRegistration(recruiterSignupDTO), HttpStatus.OK);
     }
 
     @PostMapping("/jobSeeker/signup")
-    public ResponseEntity<String> jobSeekerRegistration(@RequestBody JobSeekerDTO jobSeekerDTO) {
-        return new ResponseEntity<String>(authService.jobSeekerRegistration(jobSeekerDTO), HttpStatus.OK);
+    public ResponseEntity<String> jobSeekerRegistration(@RequestBody JobSeekerSignupDTO jobSeekerSignupDTO) {
+        return new ResponseEntity<String>(authService.jobSeekerRegistration(jobSeekerSignupDTO), HttpStatus.OK);
+    }
+
+    @PostMapping("/user/signin")
+    public SigninResponseDTO userSignin(@RequestBody SigninRequestDTO signinRequestDTO) {
+        return authService.userSignin(signinRequestDTO);
     }
 }
