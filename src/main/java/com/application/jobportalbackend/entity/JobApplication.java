@@ -31,4 +31,7 @@ public class JobApplication {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @Column(nullable = false)
+    private String resumeUrl;
 }

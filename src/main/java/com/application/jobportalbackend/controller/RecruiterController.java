@@ -1,6 +1,8 @@
 package com.application.jobportalbackend.controller;
 
+import com.application.jobportalbackend.dto.JobApplicationListDTO;
 import com.application.jobportalbackend.dto.JobPostRequestDTO;
+import com.application.jobportalbackend.dto.JobStatusUpdateDTO;
 import com.application.jobportalbackend.dto.JobUpdateRequestDTO;
 import com.application.jobportalbackend.service.RecruiterService;
 import jakarta.validation.Valid;
@@ -8,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -44,18 +47,18 @@ public class RecruiterController {
     }
 
     @PutMapping("{recruiterId}/{jobId}/{jobSeekerId}")
-    public ResponseEntity<?> updateApplicationStatus(@PathVariable Long recruiterId,
+    public String updateApplicationStatus(@PathVariable Long recruiterId,
                                           @PathVariable Long jobId,
                                           @PathVariable Long jobSeekerId,
                                           @Valid @RequestBody JobStatusUpdateDTO jobStatusUpdateDTO) {
-        String result = recruiterService.updateApplicationStatus(recruiterId, jobId, jobSeekerId, jobStatusUpdateDTO);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return recruiterService.updateApplicationStatus(recruiterId, jobId, jobSeekerId, jobStatusUpdateDTO);
     }
 
     @GetMapping("{recruiterId}/{jobId}/allApplications")
     public ResponseEntity<List<JobApplicationListDTO>> getAllApplications(@PathVariable Long recruiterId,
                                                                           @PathVariable Long jobId) {
-        return recruiterService.getAllApplications(jobId, recruiterId);
+        List<JobApplicationListDTO> jobApplicationListDTOS = recruiterService.getJobApplications(jobId, recruiterId);
+        return ResponseEntity.ok(jobApplicationListDTOS);
     }
 
     //Update recruiter profile
