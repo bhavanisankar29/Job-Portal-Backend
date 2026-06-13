@@ -20,6 +20,5 @@ public class JobListDTO {
     private double salary;
     private JobType jobType;
     private String recruiterName;
-    private List<SkillDTO> jobSkills;
-    private List<String> jobSkills_string;
+    private List<String> jobSkills;
 }

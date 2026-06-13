@@ -6,7 +6,6 @@ import com.application.jobportalbackend.repository.JobRepository;
 import com.application.jobportalbackend.repository.JobSeekerRepository;
 import com.application.jobportalbackend.repository.RecruiterRepository;
 import com.application.jobportalbackend.repository.SkillRepository;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,14 +21,12 @@ public class RecruiterServiceImpl implements RecruiterService {
     private final SkillRepository skillRepository;
     private final JobSeekerRepository jobSeekerRepository;
     private final JobRepository jobRepository;
-    private final ModelMapper modelMapper;
 
     public RecruiterServiceImpl(RecruiterRepository recruiterRepository, SkillRepository skillRepository, JobRepository jobRepository, JobSeekerRepository jobSeekerRepository) {
         this.recruiterRepository = recruiterRepository;
         this.skillRepository = skillRepository;
         this.jobSeekerRepository = jobSeekerRepository;
         this.jobRepository = jobRepository;
-        this.modelMapper = new ModelMapper();
 
     }
 
@@ -42,10 +39,19 @@ public class RecruiterServiceImpl implements RecruiterService {
         List<JobListDTO> jobListDTOS = new ArrayList<>();
 
         recruiter.getJobListings().forEach(job -> {
-            JobListDTO jobListDTO = modelMapper.map(job, JobListDTO.class);
+            JobListDTO jobListDTO = new JobListDTO();
+            jobListDTO.setJobId(job.getJobId());
+            jobListDTO.setCompanyName(recruiter.getCompanyName());
+            jobListDTO.setJobTitle(job.getJobTitle());
+            jobListDTO.setJobDescription(job.getJobDescription());
+            jobListDTO.setPostedDate(job.getPostedDate());
+            jobListDTO.setDeadLineDate(job.getDeadLineDate());
+            jobListDTO.setNoOfJobPositions(job.getNoOfJobPositions());
+            jobListDTO.setSalary(job.getSalary());
+            jobListDTO.setJobType(job.getJobType());
             jobListDTO.setRecruiterName(recruiter.getFirstName()+" "+recruiter.getLastName());
             List<String> skills = skillRepository.findByJobId(job.getJobId());
-            jobListDTO.setJobSkills_string(skills);
+            jobListDTO.setJobSkills(skills);
             jobListDTOS.add(jobListDTO);
         });
         return jobListDTOS;
@@ -76,11 +82,27 @@ public class RecruiterServiceImpl implements RecruiterService {
                 && jobPostRequestDTO.getSkillIds().isEmpty()) {
             return "Job not posted!";
         }
-        Job job = modelMapper.map(jobPostRequestDTO, Job.class);
-        job.setPostedBy(recruiterRepository.findById(jobPostRequestDTO.getRecruiterId()).orElse(null));
-        List<Skill> skills = skillRepository.findAllById(jobPostRequestDTO.getSkillIds());
-        job.setSkills(skills);
+        Job job = new Job();
+
+        job.setJobTitle(jobPostRequestDTO.getJobTitle());
+        job.setJobDescription(jobPostRequestDTO.getJobDescription());
+        job.setSalary(jobPostRequestDTO.getSalary());
+        job.setJobType(jobPostRequestDTO.getJobType());
+        job.setDeadLineDate(jobPostRequestDTO.getDeadline());
+        job.setNoOfJobPositions(jobPostRequestDTO.getNoOfPositions());
         job.setPostedDate(LocalDate.now());
+
+        job.setPostedBy(
+                recruiterRepository.findById(
+                        jobPostRequestDTO.getRecruiterId()
+                ).orElseThrow()
+        );
+
+        job.setSkills(
+                skillRepository.findAllById(
+                        jobPostRequestDTO.getSkillIds()
+                )
+        );
 
         jobRepository.save(job);
         return "Job Posted Successfully!";
@@ -99,6 +121,7 @@ public class RecruiterServiceImpl implements RecruiterService {
                 .orElseThrow(() -> new RuntimeException("Job not found with id " + jobId));
 
         job.setJobDescription(jobUpdateRequestDTO.getJobDescription());
+        job.setJobTitle(jobUpdateRequestDTO.getJobTitle());
         job.setDeadLineDate(jobUpdateRequestDTO.getDeadline());
         job.setJobType(jobUpdateRequestDTO.getJobType());
         job.setNoOfJobPositions(jobUpdateRequestDTO.getNoOfPositions());
@@ -148,10 +171,13 @@ public class RecruiterServiceImpl implements RecruiterService {
         List<JobApplication> jobApplicationList = job.getApplications();
 
         jobApplicationList.forEach(jobApplication -> {
-            JobApplicationListDTO jobApplicationListDTO = modelMapper.map(jobApplication, JobApplicationListDTO.class);
+            JobApplicationListDTO jobApplicationListDTO = new JobApplicationListDTO();
             jobApplicationListDTO.setJobSeekerId(jobApplication.getJobSeeker().getJobSeekerId());
             jobApplicationListDTO.setFirstName(jobApplication.getJobSeeker().getFirstName());
             jobApplicationListDTO.setLastName(jobApplication.getJobSeeker().getLastName());
+            jobApplicationListDTO.setResumeUrl(jobApplication.getResumeUrl());
+            jobApplicationListDTO.setAppliedDate(jobApplication.getAppliedDate());
+            jobApplicationListDTO.setStatus(jobApplication.getStatus());
             List<Skill> jobSeekerSkills = skillRepository.findAllByJobSeekerId(jobApplication.getJobSeeker().getJobSeekerId());
 
             List<SkillDTO> skillDTOList = new ArrayList<>();

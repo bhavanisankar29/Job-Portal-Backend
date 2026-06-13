@@ -46,7 +46,7 @@ public class RecruiterController {
         return recruiterService.updateJob(recruiterId, jobId, jobUpdateRequestDTO);
     }
 
-    @PutMapping("{recruiterId}/{jobId}/{jobSeekerId}")
+    @PutMapping("/updateStatus/{recruiterId}/{jobId}/{jobSeekerId}")
     public String updateApplicationStatus(@PathVariable Long recruiterId,
                                           @PathVariable Long jobId,
                                           @PathVariable Long jobSeekerId,

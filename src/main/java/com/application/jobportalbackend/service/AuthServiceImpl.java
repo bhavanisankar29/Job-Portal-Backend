@@ -60,6 +60,7 @@ public class AuthServiceImpl implements AuthService {
         jobSeeker.setEmail(jobSeekerSignupDTO.getEmail());
         jobSeeker.setFirstName(jobSeekerSignupDTO.getFirstName());
         jobSeeker.setLastName(jobSeekerSignupDTO.getLastName());
+        jobSeeker.setPassword(new BCryptPasswordEncoder().encode(jobSeekerSignupDTO.getPassword()));
         jobSeeker.setYearsOfExperience(jobSeekerSignupDTO.getYearsOfExperience());
 
         jobSeekerRepository.save(jobSeeker);
@@ -70,6 +71,8 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(encryptedPassword);
         user.setRole("JOBSEEKER");
         user.setJobSeeker(jobSeeker);
+
+        userRepository.save(user);
 
         return "JobSeeker Registration Successful!";
     }
