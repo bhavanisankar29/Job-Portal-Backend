@@ -9,7 +9,7 @@ public interface RecruiterService {
 
     List<JobListDTO> getAllJobsPosted(Long recruiterId);
     Map<String, Object> deleteJob(Long jobId, Long recruiterId);
-    String postJob(JobPostRequestDTO jobPostRequestDTO);
+    String postJob(JobPostRequestDTO jobPostRequestDTO,  Long recruiterId);
     String updateJob(Long recruiterId, Long jobId, JobUpdateRequestDTO jobUpdateRequestDTO);
     String updateApplicationStatus(Long recruiterId, Long jobId, Long jobSeekerId, JobStatusUpdateDTO jobStatusUpdateDTO);
     List<JobApplicationListDTO> getJobApplications(Long jobId, Long recruiterId);

@@ -10,7 +10,6 @@ import java.util.List;
 @Getter @Setter
 public class JobPostRequestDTO {
 
-    private Long recruiterId;
     private String jobTitle;
     private String jobDescription;
     private JobType jobType;

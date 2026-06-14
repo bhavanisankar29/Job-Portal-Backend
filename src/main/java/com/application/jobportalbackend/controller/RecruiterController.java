@@ -34,9 +34,10 @@ public class RecruiterController {
         return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
-    @PostMapping("/postJob")
-    public String postJob(@Valid @RequestBody JobPostRequestDTO jobPostRequestDTO) {
-        return recruiterService.postJob(jobPostRequestDTO);
+    @PostMapping("/postJob/{recruiterId}")
+    public String postJob(@Valid @RequestBody JobPostRequestDTO jobPostRequestDTO,
+                          @PathVariable Long recruiterId) {
+        return recruiterService.postJob(jobPostRequestDTO, recruiterId);
     }
 
     @PutMapping("/updateJob/{recruiterId}/{jobId}")

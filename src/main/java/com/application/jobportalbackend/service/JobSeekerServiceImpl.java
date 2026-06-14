@@ -3,6 +3,7 @@ package com.application.jobportalbackend.service;
 import com.application.jobportalbackend.dto.ApplyJobDTO;
 import com.application.jobportalbackend.dto.JobApplicationResponseDTO;
 import com.application.jobportalbackend.dto.JobListDTO;
+import com.application.jobportalbackend.dto.SkillDTO;
 import com.application.jobportalbackend.entity.*;
 import com.application.jobportalbackend.repository.JobApplicationRepository;
 import com.application.jobportalbackend.repository.JobRepository;
@@ -37,7 +38,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("job not found"));
 
-        if(jobApplicationRepository.existsByJobIdAndJobSeekerId(jobId, jobSeekerId)) {
+        if(jobApplicationRepository.existsByJob_JobIdAndJobSeeker_JobSeekerId(jobId, jobSeekerId)) {
             return "Already applied for this Job!";
         }
 
@@ -65,7 +66,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public String withdrawApplication(Long jobId, Long jobSeekerId) {
 
-        JobApplication jobApplication = jobApplicationRepository.findByJobIdAndJobSeekerId(jobId, jobSeekerId);
+        JobApplication jobApplication = jobApplicationRepository.findByJob_JobIdAndJobSeeker_JobSeekerId(jobId, jobSeekerId);
 
         if(jobApplication == null) { return "Application not found!"; }
 
@@ -115,7 +116,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public List<JobApplicationResponseDTO> getJobsWithGivenStatus(Status status, Long jobSeekerId) {
 
-        List<JobApplication> jobApplicationList = jobApplicationRepository.findByJobSeekerIdAndStatus(jobSeekerId, status);
+        List<JobApplication> jobApplicationList = jobApplicationRepository.findByJobSeeker_JobSeekerIdAndStatus(jobSeekerId, status);
 
         if(jobApplicationList == null) {
             throw new RuntimeException("There are no applications with the given jobSeekerId" + jobSeekerId + " and status " + status);
@@ -158,7 +159,14 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         jobListDTO.setJobType(job.getJobType()); // jobType
         jobListDTO.setRecruiterName(job.getPostedBy().getFirstName() + " " +  job.getPostedBy().getLastName()); // recruiterName
         List<Skill> skills = job.getSkills();
-        jobListDTO.setJobSkills(skills); // skills
+        List<SkillDTO> skillDTOS = new ArrayList<>();
+        skills.forEach(skill -> {
+            SkillDTO skillDTO = new SkillDTO();
+            skillDTO.setSkillId(skill.getSkillId());
+            skillDTO.setSkillName(skill.getSkillName());
+            skillDTO.setDescription(skill.getSkillDescription());
+        });
+        jobListDTO.setJobSkills(skillDTOS); // skills
 
     }
 

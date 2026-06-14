@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Long> {
 
-    boolean existsByJobIdAndJobSeekerId(Long jobId, Long jobSeekerId);
+    boolean existsByJob_JobIdAndJobSeeker_JobSeekerId(Long jobId, Long jobSeekerId);
 
-    JobApplication findByJobIdAndJobSeekerId(Long jobId, Long jobSeekerId);
+    JobApplication findByJob_JobIdAndJobSeeker_JobSeekerId(Long jobId, Long jobSeekerId);
 
-    List<JobApplication> findByJobSeekerIdAndStatus(Long jobSeekerId, Status status);
+    List<JobApplication> findByJobSeeker_JobSeekerIdAndStatus(Long jobSeekerId, Status status);
 }

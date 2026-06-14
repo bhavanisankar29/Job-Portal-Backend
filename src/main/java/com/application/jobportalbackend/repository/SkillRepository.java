@@ -8,8 +8,8 @@ import java.util.List;
 
 public interface SkillRepository extends JpaRepository<Skill, Long> {
 
-    @Query("SELECT s.skillName FROM Skill s JOIN s.jobsList jl WHERE jl.jobId = :jobId")
-    List<String> findByJobId(Long jobId);
+    @Query("SELECT s FROM Skill s JOIN s.jobsList jl WHERE jl.jobId = :jobId")
+    List<Skill> findByJobId(Long jobId);
 
     @Query("SELECT s FROM Skill s JOIN s.jobSeekerList js WHERE js.jobSeekerId = :jobSeekerId")
     List<Skill> findAllByJobSeekerId(Long jobSeekerId);

@@ -4,8 +4,10 @@ import com.application.jobportalbackend.dto.JobSeekerResponseDTO;
 import com.application.jobportalbackend.dto.RecruiterResponseDTO;
 import com.application.jobportalbackend.entity.JobSeeker;
 import com.application.jobportalbackend.entity.Recruiter;
+import com.application.jobportalbackend.entity.User;
 import com.application.jobportalbackend.repository.JobSeekerRepository;
 import com.application.jobportalbackend.repository.RecruiterRepository;
+import com.application.jobportalbackend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,10 +18,12 @@ public class AdminServiceImpl implements AdminService {
 
     private final JobSeekerRepository jobSeekerRepository;
     private final RecruiterRepository recruiterRepository;
+    private final UserRepository userRepository;
 
-    public AdminServiceImpl(JobSeekerRepository jobSeekerRepository, RecruiterRepository recruiterRepository) {
+    public AdminServiceImpl(JobSeekerRepository jobSeekerRepository, RecruiterRepository recruiterRepository, UserRepository userRepository) {
         this.jobSeekerRepository = jobSeekerRepository;
         this.recruiterRepository = recruiterRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -61,6 +65,8 @@ public class AdminServiceImpl implements AdminService {
         if(!jobSeekerRepository.existsById(jobSeekerId)) {
             throw new RuntimeException("JobSeeker with id " + jobSeekerId + " does not exist!");
         }
+        User user = userRepository.findByJobSeeker_JobSeekerId(jobSeekerId);
+        if(user!=null) { userRepository.delete(user); }
         jobSeekerRepository.deleteById(jobSeekerId);
         return "JobSeeker with id " + jobSeekerId + " has been removed.";
     }
@@ -71,6 +77,8 @@ public class AdminServiceImpl implements AdminService {
         if(!recruiterRepository.existsById(recruiterId)) {
             throw new RuntimeException("Recruiter with id " + recruiterId + " does not exist!");
         }
+        User user = userRepository.findByRecruiter_RecruiterId(recruiterId);
+        if(user!=null) { userRepository.delete(user); }
         recruiterRepository.deleteById(recruiterId);
         return "Recruiter with id " + recruiterId + " has been removed.";
     }

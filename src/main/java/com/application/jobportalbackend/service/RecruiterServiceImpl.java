@@ -2,10 +2,7 @@ package com.application.jobportalbackend.service;
 
 import com.application.jobportalbackend.dto.*;
 import com.application.jobportalbackend.entity.*;
-import com.application.jobportalbackend.repository.JobRepository;
-import com.application.jobportalbackend.repository.JobSeekerRepository;
-import com.application.jobportalbackend.repository.RecruiterRepository;
-import com.application.jobportalbackend.repository.SkillRepository;
+import com.application.jobportalbackend.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,13 +18,14 @@ public class RecruiterServiceImpl implements RecruiterService {
     private final SkillRepository skillRepository;
     private final JobSeekerRepository jobSeekerRepository;
     private final JobRepository jobRepository;
+    private final JobApplicationRepository jobApplicationRepository;
 
-    public RecruiterServiceImpl(RecruiterRepository recruiterRepository, SkillRepository skillRepository, JobRepository jobRepository, JobSeekerRepository jobSeekerRepository) {
+    public RecruiterServiceImpl(RecruiterRepository recruiterRepository, SkillRepository skillRepository, JobRepository jobRepository, JobSeekerRepository jobSeekerRepository, JobApplicationRepository jobApplicationRepository) {
         this.recruiterRepository = recruiterRepository;
         this.skillRepository = skillRepository;
         this.jobSeekerRepository = jobSeekerRepository;
         this.jobRepository = jobRepository;
-
+        this.jobApplicationRepository = jobApplicationRepository;
     }
 
     @Override
@@ -50,8 +48,16 @@ public class RecruiterServiceImpl implements RecruiterService {
             jobListDTO.setSalary(job.getSalary());
             jobListDTO.setJobType(job.getJobType());
             jobListDTO.setRecruiterName(recruiter.getFirstName()+" "+recruiter.getLastName());
-            List<String> skills = skillRepository.findByJobId(job.getJobId());
-            jobListDTO.setJobSkills(skills);
+            List<Skill> skills = skillRepository.findByJobId(job.getJobId());
+            List<SkillDTO> skillDTOS = new ArrayList<>();
+            skills.forEach(skill -> {
+                SkillDTO skillDTO = new SkillDTO();
+                skillDTO.setSkillId(skill.getSkillId());
+                skillDTO.setSkillName(skill.getSkillName());
+                skillDTO.setDescription(skill.getSkillDescription());
+                skillDTOS.add(skillDTO);
+            });
+            jobListDTO.setJobSkills(skillDTOS);
             jobListDTOS.add(jobListDTO);
         });
         return jobListDTOS;
@@ -76,9 +82,9 @@ public class RecruiterServiceImpl implements RecruiterService {
     }
 
     @Override
-    public String postJob(JobPostRequestDTO jobPostRequestDTO) {
+    public String postJob(JobPostRequestDTO jobPostRequestDTO, Long recruiterId) {
 
-        if(!recruiterRepository.existsById(jobPostRequestDTO.getRecruiterId())
+        if(!recruiterRepository.existsById(recruiterId)
                 && jobPostRequestDTO.getSkillIds().isEmpty()) {
             return "Job not posted!";
         }
@@ -92,17 +98,9 @@ public class RecruiterServiceImpl implements RecruiterService {
         job.setNoOfJobPositions(jobPostRequestDTO.getNoOfPositions());
         job.setPostedDate(LocalDate.now());
 
-        job.setPostedBy(
-                recruiterRepository.findById(
-                        jobPostRequestDTO.getRecruiterId()
-                ).orElseThrow()
-        );
+        job.setPostedBy(recruiterRepository.findById(recruiterId).orElseThrow());
 
-        job.setSkills(
-                skillRepository.findAllById(
-                        jobPostRequestDTO.getSkillIds()
-                )
-        );
+        job.setSkills(skillRepository.findAllById(jobPostRequestDTO.getSkillIds()));
 
         jobRepository.save(job);
         return "Job Posted Successfully!";
@@ -135,7 +133,7 @@ public class RecruiterServiceImpl implements RecruiterService {
     @Override
     public String updateApplicationStatus(Long recruiterId, Long jobId, Long jobSeekerId, JobStatusUpdateDTO jobStatusUpdateDTO) {
 
-        if(!recruiterRepository.existsById(recruiterId) || !jobRepository.existsById(jobId) || !jobRepository.existsById(jobSeekerId)) {
+        if(!recruiterRepository.existsById(recruiterId) || !jobRepository.existsById(jobId) || !jobApplicationRepository.existsByJob_JobIdAndJobSeeker_JobSeekerId(jobId, jobSeekerId)) {
             return "Job Status not updated!";
         }
         Job job = jobRepository.findById(jobId)
@@ -144,16 +142,11 @@ public class RecruiterServiceImpl implements RecruiterService {
         if(!job.getPostedBy().getRecruiterId().equals(recruiterId)) {
             return "Job Status not updated! It was not posted by the recruiter with id " + recruiterId;
         }
-        JobSeeker jobSeeker = jobSeekerRepository.findById(jobSeekerId)
-                .orElseThrow(() -> new RuntimeException("Job seeker with id " + jobSeekerId + " not found"));
 
-        List<JobApplication> jobApplicationList = jobSeeker.getJobApplicationList();
-        for(JobApplication jobApplication : jobApplicationList) {
-            if(jobApplication.getJob().getJobId().equals(jobId)) {
-                jobApplication.setStatus(jobStatusUpdateDTO.getJobStatus());
-            }
-        }
-        jobSeekerRepository.save(jobSeeker);
+        JobApplication jobApplication = jobApplicationRepository.findByJob_JobIdAndJobSeeker_JobSeekerId(jobId, jobSeekerId);
+        jobApplication.setStatus(jobStatusUpdateDTO.getJobStatus());
+        jobApplicationRepository.save(jobApplication);
+
         return "Job Status updated successfully.";
     }
 
