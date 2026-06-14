@@ -1,6 +1,7 @@
 package com.application.jobportalbackend.dto;
 
 import com.application.jobportalbackend.entity.JobType;
+import com.application.jobportalbackend.entity.Skill;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,5 +21,5 @@ public class JobListDTO {
     private double salary;
     private JobType jobType;
     private String recruiterName;
-    private List<String> jobSkills;
+    private List<Skill> jobSkills;
 }

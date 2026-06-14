@@ -3,14 +3,10 @@ package com.application.jobportalbackend.service;
 import com.application.jobportalbackend.dto.ApplyJobDTO;
 import com.application.jobportalbackend.dto.JobApplicationResponseDTO;
 import com.application.jobportalbackend.dto.JobListDTO;
-import com.application.jobportalbackend.entity.Job;
-import com.application.jobportalbackend.entity.JobApplication;
-import com.application.jobportalbackend.entity.JobSeeker;
-import com.application.jobportalbackend.entity.Status;
+import com.application.jobportalbackend.entity.*;
 import com.application.jobportalbackend.repository.JobApplicationRepository;
 import com.application.jobportalbackend.repository.JobRepository;
 import com.application.jobportalbackend.repository.JobSeekerRepository;
-import com.application.jobportalbackend.repository.SkillRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,13 +19,13 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     private final JobSeekerRepository jobSeekerRepository;
     private final JobRepository jobRepository;
     private final JobApplicationRepository jobApplicationRepository;
-    private final SkillRepository skillRepository;
 
-    public JobSeekerServiceImpl(JobSeekerRepository jobSeekerRepository, JobRepository jobRepository, JobApplicationRepository jobApplicationRepository, SkillRepository skillRepository) {
+    public JobSeekerServiceImpl(JobSeekerRepository jobSeekerRepository,
+                                JobRepository jobRepository,
+                                JobApplicationRepository jobApplicationRepository) {
         this.jobSeekerRepository = jobSeekerRepository;
         this.jobRepository = jobRepository;
         this.jobApplicationRepository = jobApplicationRepository;
-        this.skillRepository = skillRepository;
     }
 
     @Override
@@ -54,6 +50,12 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         jobApplication.setJobSeeker(jobSeeker);
         jobApplication.setAppliedDate(LocalDate.now());
         jobApplication.setStatus(Status.PENDING);
+
+        if(applyJobDTO.getResumeUrl() == null ||
+                applyJobDTO.getResumeUrl().isBlank()) {
+            throw new RuntimeException("Resume URL is required");
+        }
+
         jobApplication.setResumeUrl(applyJobDTO.getResumeUrl());
 
         jobApplicationRepository.save(jobApplication);
@@ -63,16 +65,10 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public String withdrawApplication(Long jobId, Long jobSeekerId) {
 
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("job not found"));
-
-        JobSeeker jobSeeker = jobSeekerRepository.findById(jobSeekerId)
-                .orElseThrow(() -> new RuntimeException("jobSeekerId not found"));
-
-        if(!jobApplicationRepository.existsByJobIdAndJobSeekerId(jobId, jobSeekerId)) {
-            return "JobSeeker with id " + jobSeekerId + " did not apply for the Job!";
-        }
         JobApplication jobApplication = jobApplicationRepository.findByJobIdAndJobSeekerId(jobId, jobSeekerId);
+
+        if(jobApplication == null) { return "Application not found!"; }
+
         if(jobApplication.getStatus() == Status.PENDING) {
             jobApplicationRepository.delete(jobApplication);
             return "Application withdrawn successfully!";
@@ -88,18 +84,9 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
         jobs.forEach(job -> {
             JobListDTO jobListDTO = new JobListDTO();
-            jobListDTO.setJobId(job.getJobId());
-            jobListDTO.setCompanyName(job.getPostedBy().getCompanyName());
-            jobListDTO.setJobTitle(job.getJobTitle());
-            jobListDTO.setJobDescription(job.getJobDescription());
-            jobListDTO.setPostedDate(job.getPostedDate());
-            jobListDTO.setDeadLineDate(job.getDeadLineDate());
-            jobListDTO.setNoOfJobPositions(job.getNoOfJobPositions());
-            jobListDTO.setSalary(job.getSalary());
-            jobListDTO.setJobType(job.getJobType());
-            jobListDTO.setRecruiterName(job.getPostedBy().getFirstName() + " " + job.getPostedBy().getLastName());
-            List<String> skills = skillRepository.findByJobId(job.getJobId());
-            jobListDTO.setJobSkills(skills);
+
+            convertJobTOJobListDTO(job, jobListDTO);
+
             jobListDTOS.add(jobListDTO);
         });
         return jobListDTOS;
@@ -118,20 +105,77 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
             JobApplicationResponseDTO jobApplicationResponseDTO = new JobApplicationResponseDTO();
 
-            jobApplicationResponseDTO.setApplicationId(jobApplication.getApplicationId()); // applicationId
-            jobApplicationResponseDTO.setJobId(jobApplication.getJob().getJobId()); // jobId
-            jobApplicationResponseDTO.setJobTitle(jobApplication.getJob().getJobTitle()); // jobTitle
-            jobApplicationResponseDTO.setJobDescription(jobApplication.getJob().getJobDescription()); // jobDescription
-            jobApplicationResponseDTO.setJobStatus(jobApplication.getStatus()); // jobStatus
-            jobApplicationResponseDTO.setJobType(jobApplication.getJob().getJobType()); // jobType
-            jobApplicationResponseDTO.setPostedDate(jobApplication.getJob().getPostedDate()); // postedDate
-            jobApplicationResponseDTO.setAppliedDate(jobApplication.getAppliedDate()); // appliedDate
-            jobApplicationResponseDTO.setDeadLineDate(jobApplication.getJob().getDeadLineDate()); // deadLineDate
-            jobApplicationResponseDTO.setNoOfPositions(jobApplication.getJob().getNoOfJobPositions()); // noOfPositions
-            jobApplicationResponseDTO.setSalary(jobApplication.getJob().getSalary()); // salary
+            convertJobApplicationToJobApplicationResponseDTO(jobApplication, jobApplicationResponseDTO);
 
             jobApplicationResponseDTOS.add(jobApplicationResponseDTO);
         });
         return jobApplicationResponseDTOS;
+    }
+
+    @Override
+    public List<JobApplicationResponseDTO> getJobsWithGivenStatus(Status status, Long jobSeekerId) {
+
+        List<JobApplication> jobApplicationList = jobApplicationRepository.findByJobSeekerIdAndStatus(jobSeekerId, status);
+
+        if(jobApplicationList == null) {
+            throw new RuntimeException("There are no applications with the given jobSeekerId" + jobSeekerId + " and status " + status);
+        }
+        List<JobApplicationResponseDTO> jobApplicationResponseDTOS = new ArrayList<>();
+
+        jobApplicationList.forEach(jobApplication -> {
+            JobApplicationResponseDTO jobApplicationResponseDTO = new JobApplicationResponseDTO();
+
+            convertJobApplicationToJobApplicationResponseDTO(jobApplication, jobApplicationResponseDTO);
+
+            jobApplicationResponseDTOS.add(jobApplicationResponseDTO);
+        });
+        return jobApplicationResponseDTOS;
+    }
+
+    @Override
+    public JobListDTO getJob(Long jobId) {
+
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job with " + jobId + " not found!"));
+
+        JobListDTO jobListDTO = new JobListDTO();
+
+        convertJobTOJobListDTO(job, jobListDTO);
+
+        return jobListDTO;
+    }
+
+    private void convertJobTOJobListDTO(Job job, JobListDTO jobListDTO) {
+
+        jobListDTO.setJobId(job.getJobId()); // jobId
+        jobListDTO.setCompanyName(job.getPostedBy().getCompanyName()); // companyName
+        jobListDTO.setJobTitle(job.getJobTitle()); // jobTitle
+        jobListDTO.setJobDescription(job.getJobDescription()); // jobDescription
+        jobListDTO.setPostedDate(job.getPostedDate()); // postedDate
+        jobListDTO.setDeadLineDate(job.getDeadLineDate()); // deadLineDate
+        jobListDTO.setNoOfJobPositions(job.getNoOfJobPositions()); // noOfPositions
+        jobListDTO.setSalary(job.getSalary()); // salary
+        jobListDTO.setJobType(job.getJobType()); // jobType
+        jobListDTO.setRecruiterName(job.getPostedBy().getFirstName() + " " +  job.getPostedBy().getLastName()); // recruiterName
+        List<Skill> skills = job.getSkills();
+        jobListDTO.setJobSkills(skills); // skills
+
+    }
+
+    private void convertJobApplicationToJobApplicationResponseDTO(JobApplication jobApplication,
+                                                                  JobApplicationResponseDTO jobApplicationResponseDTO) {
+
+        jobApplicationResponseDTO.setApplicationId(jobApplication.getApplicationId()); // applicationId
+        jobApplicationResponseDTO.setJobId(jobApplication.getJob().getJobId()); // jobId
+        jobApplicationResponseDTO.setJobTitle(jobApplication.getJob().getJobTitle()); // jobTitle
+        jobApplicationResponseDTO.setJobDescription(jobApplication.getJob().getJobDescription()); // jobDescription
+        jobApplicationResponseDTO.setJobStatus(jobApplication.getStatus()); // jobStatus
+        jobApplicationResponseDTO.setJobType(jobApplication.getJob().getJobType()); // jobType
+        jobApplicationResponseDTO.setPostedDate(jobApplication.getJob().getPostedDate()); // postedDate
+        jobApplicationResponseDTO.setAppliedDate(jobApplication.getAppliedDate()); // appliedDate
+        jobApplicationResponseDTO.setDeadLineDate(jobApplication.getJob().getDeadLineDate()); // deadLineDate
+        jobApplicationResponseDTO.setNoOfPositions(jobApplication.getJob().getNoOfJobPositions()); // noOfPositions
+        jobApplicationResponseDTO.setSalary(jobApplication.getJob().getSalary()); // salary
+
     }
 }

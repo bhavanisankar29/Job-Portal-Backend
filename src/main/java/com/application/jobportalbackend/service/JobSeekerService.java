@@ -3,6 +3,7 @@ package com.application.jobportalbackend.service;
 import com.application.jobportalbackend.dto.ApplyJobDTO;
 import com.application.jobportalbackend.dto.JobApplicationResponseDTO;
 import com.application.jobportalbackend.dto.JobListDTO;
+import com.application.jobportalbackend.entity.Status;
 
 import java.util.List;
 
@@ -11,4 +12,6 @@ public interface JobSeekerService {
     String withdrawApplication(Long jobId, Long jobSeekerId);
     List<JobListDTO> getAllJobs();
     List<JobApplicationResponseDTO> getAllAppliedJobs(Long jobSeekerId);
+    List<JobApplicationResponseDTO> getJobsWithGivenStatus(Status status, Long jobSeekerId);
+    JobListDTO getJob(Long jobId);
 }

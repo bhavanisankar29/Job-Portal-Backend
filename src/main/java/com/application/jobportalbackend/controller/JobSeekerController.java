@@ -3,6 +3,7 @@ package com.application.jobportalbackend.controller;
 import com.application.jobportalbackend.dto.ApplyJobDTO;
 import com.application.jobportalbackend.dto.JobApplicationResponseDTO;
 import com.application.jobportalbackend.dto.JobListDTO;
+import com.application.jobportalbackend.entity.Status;
 import com.application.jobportalbackend.service.JobSeekerService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -40,5 +41,16 @@ public class JobSeekerController {
     @GetMapping("/allAppliedJobs/{jobSeekerId}")
     public List<JobApplicationResponseDTO> getAllAppliedJobs(@PathVariable Long jobSeekerId) {
         return jobSeekerService.getAllAppliedJobs(jobSeekerId);
+    }
+
+    @GetMapping("/{jobSeekerId}/jobStatus/{status}")
+    public List<JobApplicationResponseDTO> getJobsWithGivenStatus(@PathVariable Status status,
+                                                                  @PathVariable Long jobSeekerId) {
+        return jobSeekerService.getJobsWithGivenStatus(status, jobSeekerId);
+    }
+
+    @GetMapping("/job/{jobId}")
+    public JobListDTO getJob(@PathVariable Long jobId) {
+        return jobSeekerService.getJob(jobId);
     }
 }
