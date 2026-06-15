@@ -118,6 +118,8 @@ Job Seeker:
 - GET /jobSeekers/{jobSeekerId}/jobStatus/{status}
 - GET /jobSeekers/job/{jobId}
 
+> **Note:** Detailed information about the endpoints are in **apiDetails.txt** file.
+
 ## Swagger UI
 
 After starting the application, open:

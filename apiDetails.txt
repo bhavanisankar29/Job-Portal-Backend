@@ -1,0 +1,95 @@
+This file contains all the details like JSON request & response parameters for every endpoint.
+Only the Authentication (starting with /auth/**) endpoints can be accessed without the JWT token.
+Every other endpoint require the JWT token for access it.
+
+Authentication (/auth):
+
+1. POST /auth/recruiter/signup
+    parameters:
+        email: string
+        firstName: string
+        lastName: string
+        phoneNo: string
+        recruiterBio: string
+        companyName: string
+        password: string
+        role: string
+
+2. POST /auth/jobSeeker/signup
+    parameters:
+        email: string
+        firstName: string
+        lastName: string
+        password: string
+        yearsOfExperience: string
+
+3. POST /auth/user/signin
+    parameters:
+        email: string
+        password: string
+    response:
+        token: string
+        userId: long
+        email: string
+        role: string
+        jobSeekerId: long
+        recruiterId: long
+
+Admin (/admin):
+
+1. GET /admin/getAllJobSeekers
+
+2. GET /admin/getAllRecruiters
+
+3. DELETE /admin/removeProfile/jobSeeker/{jobSeekerId}
+
+4. DELETE /admin/removeProfile/recruiter/{recruiterId}
+
+JobSeeker (/jobSeekers):
+
+1. POST /jobSeekers/applyJob/{jobId}/{jobSeekerId}
+    parameters:
+        resumeUrl: string
+
+2. DELETE /jobSeekers/withdrawApplication/{jobId}/{jobSeekerId}
+
+3. GET /jobSeekers/allJobs
+
+4. GET /jobSeekers/allAppliedJobs/{jobSeekerId}
+
+5. GET /jobSeekers/{jobSeekerId}/jobStatus/{status}
+
+6. GET /jobSeekers/job/{jobId}
+
+Recruiter (/recruiters):
+
+1. GET /recruiters/allJobsPosted/{recruiterId}
+
+2. DELETE /recruiters/{recruiterId}/deleteJob/{jobId}
+
+3. POST /recruiters/postJob/{recruiterId}
+    parameters:
+        jobTitle: string
+        jobDescription: string
+        jobType: JobType
+        skillIds: List<Long>
+        salary: double
+        deadLine: LocalDate
+        noOfPositions: int
+
+4. POST /recruiters/updateJob/{recruiterId}/{jobId}
+    parameters:
+        recruiterId: Long
+        jobTitle: string
+        jobDescription: string
+        jobType: JobType
+        skillIds: List<Long>
+        salary: double
+        deadLine: LocalDate
+        noOfPositions: int
+
+5. PUT /recruiters/updateStatus/{recruiterId}/{jobId}/{jobSeekerId}
+    parameters:
+        jobStatus: Status
+
+6. GET /recruiters/{recruiterId}/{jobId}/allApplications
