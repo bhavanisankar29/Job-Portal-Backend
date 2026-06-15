@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter @Setter
 public class SigninResponseDTO {
 
+    private String token;
     private Long userId;
     private String email;
     private String role;

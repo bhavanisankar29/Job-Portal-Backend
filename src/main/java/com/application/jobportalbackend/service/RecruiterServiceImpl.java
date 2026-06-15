@@ -16,14 +16,12 @@ public class RecruiterServiceImpl implements RecruiterService {
 
     private final RecruiterRepository recruiterRepository;
     private final SkillRepository skillRepository;
-    private final JobSeekerRepository jobSeekerRepository;
     private final JobRepository jobRepository;
     private final JobApplicationRepository jobApplicationRepository;
 
-    public RecruiterServiceImpl(RecruiterRepository recruiterRepository, SkillRepository skillRepository, JobRepository jobRepository, JobSeekerRepository jobSeekerRepository, JobApplicationRepository jobApplicationRepository) {
+    public RecruiterServiceImpl(RecruiterRepository recruiterRepository, SkillRepository skillRepository, JobRepository jobRepository, JobApplicationRepository jobApplicationRepository) {
         this.recruiterRepository = recruiterRepository;
         this.skillRepository = skillRepository;
-        this.jobSeekerRepository = jobSeekerRepository;
         this.jobRepository = jobRepository;
         this.jobApplicationRepository = jobApplicationRepository;
     }

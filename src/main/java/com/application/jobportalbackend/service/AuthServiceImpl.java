@@ -10,7 +10,11 @@ import com.application.jobportalbackend.entity.User;
 import com.application.jobportalbackend.repository.JobSeekerRepository;
 import com.application.jobportalbackend.repository.RecruiterRepository;
 import com.application.jobportalbackend.repository.UserRepository;
+import com.application.jobportalbackend.security.JwtService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,11 +23,23 @@ public class AuthServiceImpl implements AuthService {
     private final RecruiterRepository recruiterRepository;
     private final UserRepository userRepository;
     private final JobSeekerRepository jobSeekerRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthServiceImpl(RecruiterRepository recruiterRepository, UserRepository userRepository, JobSeekerRepository jobSeekerRepository) {
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
+    public AuthServiceImpl(RecruiterRepository recruiterRepository,
+                           UserRepository userRepository,
+                           JobSeekerRepository jobSeekerRepository,
+                           PasswordEncoder passwordEncoder,
+                           AuthenticationManager authenticationManager,
+                           JwtService jwtService) {
         this.recruiterRepository = recruiterRepository;
         this.userRepository = userRepository;
         this.jobSeekerRepository = jobSeekerRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -42,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = new User();
         user.setEmail(recruiterSignupDTO.getEmail());
-        String encryptedPassword = new BCryptPasswordEncoder().encode(recruiterSignupDTO.getPassword());
+        String encryptedPassword = passwordEncoder.encode(recruiterSignupDTO.getPassword());
         user.setPassword(encryptedPassword);
         user.setRole(recruiterSignupDTO.getRole());
         user.setRecruiter(recruiter);
@@ -60,14 +76,14 @@ public class AuthServiceImpl implements AuthService {
         jobSeeker.setEmail(jobSeekerSignupDTO.getEmail());
         jobSeeker.setFirstName(jobSeekerSignupDTO.getFirstName());
         jobSeeker.setLastName(jobSeekerSignupDTO.getLastName());
-        jobSeeker.setPassword(new BCryptPasswordEncoder().encode(jobSeekerSignupDTO.getPassword()));
+        jobSeeker.setPassword(passwordEncoder.encode(jobSeekerSignupDTO.getPassword()));
         jobSeeker.setYearsOfExperience(jobSeekerSignupDTO.getYearsOfExperience());
 
         jobSeekerRepository.save(jobSeeker);
 
         User user = new User();
         user.setEmail(jobSeekerSignupDTO.getEmail());
-        String encryptedPassword = new BCryptPasswordEncoder().encode(jobSeekerSignupDTO.getPassword());
+        String encryptedPassword = passwordEncoder.encode(jobSeekerSignupDTO.getPassword());
         user.setPassword(encryptedPassword);
         user.setRole("JOBSEEKER");
         user.setJobSeeker(jobSeeker);
@@ -80,22 +96,23 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public SigninResponseDTO userSignin(SigninRequestDTO signinRequestDTO) {
 
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signinRequestDTO.getEmail(),
+                signinRequestDTO.getPassword()));
+
         User user = userRepository.findByEmail(signinRequestDTO.getEmail());
-        if (user == null) {
-            throw new RuntimeException("User not found! Invalid email."); // Should create a separate exception for this.
-        }
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        boolean passwordMatch = passwordEncoder.matches(signinRequestDTO.getPassword(), user.getPassword());
-        if (!passwordMatch) { throw new RuntimeException("Invalid password."); }
+
+        String token = jwtService.generateToken(user.getEmail(),  user.getRole());
 
         SigninResponseDTO signinResponseDTO = new SigninResponseDTO();
+        signinResponseDTO.setToken(token);
         signinResponseDTO.setUserId(user.getUserId());
         signinResponseDTO.setEmail(user.getEmail());
-        if(user.getRole().equals("JOBSEEKER")) {
-            signinResponseDTO.setJobSeekerId(user.getJobSeeker().getJobSeekerId());
-        } else if(user.getRole().equals("RECRUITER")) {
-            signinResponseDTO.setRecruiterId(user.getRecruiter().getRecruiterId());
-        }
+        signinResponseDTO.setRole(user.getRole());
+
+        if(user.getJobSeeker()!=null) signinResponseDTO.setJobSeekerId(user.getJobSeeker().getJobSeekerId());
+
+        if(user.getRecruiter()!=null) signinResponseDTO.setRecruiterId(user.getRecruiter().getRecruiterId());
+
         return signinResponseDTO;
     }
 }
